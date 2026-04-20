@@ -1,0 +1,398 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Бінж Генератор</title>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,wght@0,300;0,400;0,600;1,300;1,400&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  :root {
+    --purple: #c9b8f0;
+    --purple-deep: #9b7ed4;
+    --green: #b8e8d0;
+    --green-deep: #6ec4a0;
+    --ink: #1a1628;
+    --ink-soft: #4a4260;
+    --ink-muted: #8a82a0;
+    --bubble-bg: rgba(255,255,255,0.55);
+    --bubble-border: rgba(255,255,255,0.8);
+    --radius-bubble: 999px;
+    --radius-card: 28px;
+  }
+  html { height: 100%; }
+  body {
+    min-height: 100vh;
+    font-family: 'DM Sans', sans-serif;
+    color: var(--ink);
+    background: linear-gradient(135deg, #ddd5f5 0%, #e8f5ee 40%, #d5eae8 70%, #c8d8f0 100%);
+    background-attachment: fixed;
+    overflow-x: hidden;
+  }
+  body::before {
+    content: '';
+    position: fixed;
+    top: -30vh; left: -20vw;
+    width: 70vw; height: 70vw;
+    border-radius: 50%;
+    background: radial-gradient(circle, rgba(185,155,230,0.25) 0%, transparent 70%);
+    pointer-events: none; z-index: 0;
+  }
+  body::after {
+    content: '';
+    position: fixed;
+    bottom: -20vh; right: -15vw;
+    width: 60vw; height: 60vw;
+    border-radius: 50%;
+    background: radial-gradient(circle, rgba(100,200,160,0.2) 0%, transparent 70%);
+    pointer-events: none; z-index: 0;
+  }
+  .wrap {
+    position: relative; z-index: 1;
+    min-height: 100vh;
+    display: flex; flex-direction: column; align-items: center;
+    padding: 0 1rem 4rem;
+  }
+  header {
+    width: 100%; max-width: 540px;
+    padding: 2rem 0 1rem;
+    display: flex; align-items: center; gap: 10px;
+  }
+  .logo-dot {
+    width: 32px; height: 32px; border-radius: 50%;
+    background: linear-gradient(135deg, var(--purple-deep), var(--green-deep));
+    flex-shrink: 0;
+  }
+  .logo-text {
+    font-family: 'Fraunces', serif;
+    font-size: 17px; font-weight: 400;
+    color: var(--ink-soft); letter-spacing: -0.01em;
+  }
+  .card {
+    width: 100%; max-width: 540px;
+    background: rgba(255,255,255,0.45);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border: 1px solid rgba(255,255,255,0.75);
+    border-radius: var(--radius-card);
+    padding: 2rem 2rem 2.5rem;
+    animation: fadeUp 0.5s ease both;
+  }
+  @keyframes fadeUp {
+    from { opacity:0; transform: translateY(18px); }
+    to { opacity:1; transform: translateY(0); }
+  }
+  .prog-bar { display: flex; gap: 5px; margin-bottom: 2rem; }
+  .pdot {
+    height: 3px; flex: 1; border-radius: 99px;
+    background: rgba(155,126,212,0.18);
+    transition: background 0.4s;
+  }
+  .pdot.done { background: var(--purple-deep); }
+  .step-label {
+    font-size: 11px; font-weight: 500; letter-spacing: 0.1em;
+    text-transform: uppercase; color: var(--purple-deep); margin-bottom: 6px;
+  }
+  .step-q {
+    font-family: 'Fraunces', serif;
+    font-size: 24px; font-weight: 300; line-height: 1.3;
+    color: var(--ink); margin-bottom: 4px;
+  }
+  .step-sub { font-size: 13px; color: var(--ink-muted); margin-bottom: 1.4rem; }
+  .mb { margin-bottom: 1.4rem; }
+  .opts { display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 1.5rem; }
+  .opt {
+    background: var(--bubble-bg);
+    border: 1.5px solid var(--bubble-border);
+    border-radius: var(--radius-bubble);
+    padding: 10px 20px;
+    font-size: 14px; font-weight: 400;
+    color: var(--ink-soft);
+    cursor: pointer;
+    transition: all 0.18s ease;
+    backdrop-filter: blur(8px);
+    display: flex; align-items: center; gap: 8px;
+    user-select: none;
+  }
+  .opt:hover { background: rgba(255,255,255,0.75); border-color: var(--purple-deep); color: var(--ink); transform: translateY(-1px); }
+  .opt.sel { background: rgba(255,255,255,0.9); border-color: var(--purple-deep); border-width: 2px; color: var(--ink); font-weight: 500; }
+  .opt .indicator {
+    width: 16px; height: 16px; border-radius: 50%;
+    border: 1.5px solid rgba(155,126,212,0.4);
+    display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0; transition: all 0.18s;
+  }
+  .opt.checkbox .indicator { border-radius: 5px; }
+  .opt.sel .indicator { background: var(--purple-deep); border-color: var(--purple-deep); }
+  .opt .indicator svg { display: none; }
+  .opt.sel .indicator svg { display: block; }
+  textarea {
+    width: 100%;
+    background: var(--bubble-bg);
+    border: 1.5px solid var(--bubble-border);
+    border-radius: 20px;
+    padding: 14px 18px;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 14px; color: var(--ink);
+    resize: none; min-height: 90px; line-height: 1.6;
+    backdrop-filter: blur(8px);
+    transition: border-color 0.18s;
+    margin-bottom: 1.5rem;
+  }
+  textarea::placeholder { color: var(--ink-muted); }
+  textarea:focus { outline: none; border-color: var(--purple-deep); background: rgba(255,255,255,0.7); }
+  .nav { display: flex; justify-content: space-between; align-items: center; }
+  .btn-back { background: none; border: none; font-family: 'DM Sans', sans-serif; font-size: 13px; color: var(--ink-muted); cursor: pointer; padding: 8px 0; }
+  .btn-back:hover { color: var(--ink-soft); }
+  .btn-skip { background: none; border: none; font-family: 'DM Sans', sans-serif; font-size: 13px; color: var(--ink-muted); cursor: pointer; text-decoration: underline; }
+  .btn-next {
+    background: linear-gradient(135deg, var(--purple-deep) 0%, var(--green-deep) 100%);
+    color: white; border: none; border-radius: var(--radius-bubble);
+    padding: 12px 28px; font-family: 'DM Sans', sans-serif;
+    font-size: 14px; font-weight: 500; cursor: pointer;
+    transition: opacity 0.18s, transform 0.18s; letter-spacing: 0.01em;
+  }
+  .btn-next:disabled { opacity: 0.35; cursor: default; transform: none; }
+  .btn-next:not(:disabled):hover { opacity: 0.9; transform: translateY(-1px); }
+  .result-label {
+    font-size: 11px; font-weight: 500; letter-spacing: 0.1em;
+    text-transform: uppercase; color: var(--purple-deep);
+    margin-bottom: 12px; display: flex; align-items: center; gap: 8px;
+  }
+  .loader {
+    width: 14px; height: 14px;
+    border: 2px solid rgba(155,126,212,0.3);
+    border-top-color: var(--purple-deep);
+    border-radius: 50%;
+    animation: spin 0.7s linear infinite; flex-shrink: 0;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  .result-text { font-size: 15px; line-height: 1.8; color: var(--ink); white-space: pre-wrap; }
+  .result-actions { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 1.5rem; }
+  .btn-alt {
+    background: var(--bubble-bg);
+    border: 1.5px solid var(--bubble-border);
+    border-radius: var(--radius-bubble);
+    padding: 10px 20px; font-family: 'DM Sans', sans-serif;
+    font-size: 13px; color: var(--ink-soft); cursor: pointer;
+    transition: all 0.18s; backdrop-filter: blur(8px);
+  }
+  .btn-alt:hover { background: rgba(255,255,255,0.75); color: var(--ink); }
+  .hero-title { font-family: 'Fraunces', serif; font-size: 38px; font-weight: 300; line-height: 1.15; color: var(--ink); margin-bottom: 8px; }
+  .hero-title em { font-style: italic; color: var(--purple-deep); }
+  .hero-sub { font-size: 15px; color: var(--ink-muted); margin-bottom: 2rem; }
+  .btn-start {
+    background: linear-gradient(135deg, var(--purple-deep) 0%, var(--green-deep) 100%);
+    color: white; border: none; border-radius: var(--radius-bubble);
+    padding: 14px 36px; font-family: 'DM Sans', sans-serif;
+    font-size: 15px; font-weight: 500; cursor: pointer;
+    transition: opacity 0.18s, transform 0.18s;
+  }
+  .btn-start:hover { opacity: 0.9; transform: translateY(-1px); }
+  .summary { margin-bottom: 1.5rem; }
+  .sum-row { display: flex; gap: 10px; padding: 7px 0; border-bottom: 1px solid rgba(155,126,212,0.12); font-size: 13px; }
+  .sum-key { color: var(--ink-muted); min-width: 80px; flex-shrink: 0; }
+  .sum-val { color: var(--ink-soft); }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div class="logo-dot"></div>
+    <span class="logo-text">Бінж Генератор</span>
+  </header>
+  <div class="card" id="app"></div>
+</div>
+<script>
+const CHECK = `<svg width="10" height="8" viewBox="0 0 10 8" fill="none"><path d="M1 4L3.5 6.5L9 1" stroke="white" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
+const DOT = `<svg width="7" height="7" viewBox="0 0 7 7"><circle cx="3.5" cy="3.5" r="2.5" fill="white"/></svg>`;
+
+const questions = [
+  { id:"mood", label:"Настрій", multi:false, text:"Який у тебе зараз настрій?",
+    opts:["Хочеться чогось легкого і смішного","Поплакати та відчути, що таке бути людиною","Хочеться напруги або чогось специфічного","Хочеться розгадувати загадки чи ігри розуму","Хочеться дивитись на пригоди"] },
+  { id:"vibe", label:"Вайб", type:"text", optional:true, text:"Є конкретний вайб або кіно, схоже на яке шукаєш?", sub:"Опціональне — можна пропустити" },
+  { id:"platforms", label:"Платформи", multi:true, text:"До яких стрімінгів маєш доступ?", sub:"Можна обрати кілька",
+    opts:["Netflix","Megogo","Apple TV+","Amazon Prime Video","HBO Max","Takflix","Інше / не важливо"] },
+  { id:"time", label:"Час", multi:false, text:"На який час розраховуєш?",
+    opts:["~2 год — один фільм","Готовий(а) до міні-серіалу (за декілька годин або днів)","Хочу повноцінний серіал, готовий(а) до кількох сезонів","Не принципово"] },
+  { id:"era", label:"Епоха", multi:false, text:"З якого часу кіно?",
+    opts:["Тільки нове (останні 2–3 роки)","Останні 10 років","Класика теж ок — будь-який рік","Не важливо"] },
+  { id:"level", label:"Досвід", multi:false, text:"Як би ти себе описав(ла) як глядача?",
+    opts:["Рідко щось дивлюсь, довіряю тільки перевіреним рекомендаціям","Дивлюсь на вихідних, бачив(ла) всі популярні фільми і серіали","Знаю всі новинки, дивлюсь все що виходить — шукаю hidden gems","Все одно"] },
+  { id:"avoid", label:"Виключити", multi:true, text:"Що точно не хочеш сьогодні?", sub:"Можна обрати кілька",
+    opts:["Нічого важкого і депресивного","Нічого страшного або гострого","Нічого повільного і затяжного","Нічого передбачуваного і банального","Нічого з насильством","Все підійде"] }
+];
+
+let answers = {}, current = -1, lastPrompt = '';
+const app = document.getElementById('app');
+
+function renderProg(idx) {
+  return `<div class="prog-bar">${questions.map((_,i)=>`<div class="pdot ${i<=idx?'done':''}"></div>`).join('')}</div>`;
+}
+
+function canProceed(q) {
+  if (q.optional || q.type==='text') return true;
+  const a = answers[q.id];
+  if (a===undefined||a===null) return false;
+  if (q.multi) return Array.isArray(a) && a.length>0;
+  return true;
+}
+
+function get(id) {
+  const q=questions.find(x=>x.id===id), a=answers[id];
+  if (!q||a===undefined||a===null||a==='') return null;
+  if (q.type==='text') return a;
+  if (q.multi) return Array.isArray(a)&&a.length ? a.map(i=>q.opts[i]).join(', ') : null;
+  return q.opts[a];
+}
+
+function buildPrompt(alt) {
+  const mood=get('mood'),vibe=get('vibe'),platforms=get('platforms');
+  const time=get('time'),era=get('era'),level=get('level'),avoid=get('avoid');
+  const isGem=level&&level.includes('hidden gems');
+  const isBeginner=level&&level.includes('Рідко');
+  return `Ти — кінокритик і знавець кіно. Відповідай українською. Дай рівно 3 персональні рекомендації фільмів або серіалів.
+
+РЕЙТИНГИ: Орієнтуйся насамперед на глядацькі оцінки Letterboxd і Rotten Tomatoes (аудиторія), потім критики. IMDb — менш пріоритетний.
+
+ПРАВИЛО: ${isGem?'Людина шукає hidden gems. ЗАБОРОНЕНО: Інтерстелар, Темний лицар, Початок, Гра престолів, Пуститись берега, Клан Сопрано, Во все тяжкие. Тільки справжні знахідки.':isBeginner?'Людина рідко дивиться кіно. Пропонуй надійні та доступні фільми.':'Уникай найочевидніших хітів. Менш розрекламоване, але якісне.'}
+
+Надавай перевагу американському та європейському кіно. Інше — лише якщо здобуло міжнародне визнання.
+
+Відповіді:
+- Настрій: ${mood||'—'}
+- Час: ${time||'—'}
+- Епоха: ${era||'—'}
+- Платформи: ${platforms||'будь-які'}
+- Досвід: ${level||'—'}
+- Виключити: ${avoid||'—'}
+${vibe?`- Вайб: ${vibe}`:''}
+${alt?'\nЗапропонуй 3 абсолютно інші варіанти — не повторюй жодного з попередніх.':''}
+
+Формат:
+🎬 Назва (рік) — жанр
+Чому саме це: 2–3 речення живою мовою.
+Де дивитись: платформа.
+Рейтинг: Letterboxd X.X / RT глядачі XX% / критики XX%
+
+Без вступів — одразу рекомендації.`;
+}
+
+function showHome() {
+  current = -1;
+  app.innerHTML = `<div style="animation:fadeUp 0.5s ease both">
+    <div class="hero-title">Що дивитись<br><em>сьогодні ввечері?</em></div>
+    <div class="hero-sub">Відповідай на 7 питань — отримуй персональні рекомендації від AI.</div>
+    <button class="btn-start" id="start">Почати →</button>
+  </div>`;
+  document.getElementById('start').onclick = () => { current=0; renderStep(0); };
+}
+
+function renderStep(idx) {
+  if (idx>=questions.length) { showSummary(); return; }
+  const q=questions[idx];
+  let inner='';
+  if (q.type==='text') {
+    inner=`<textarea id="ta" placeholder="Наприклад: щось як Острів проклятих, або вайб скандинавського нуару…">${answers[q.id]||''}</textarea>`;
+  } else {
+    const icon=q.multi?CHECK:DOT;
+    const vals=q.multi?(answers[q.id]||[]):null;
+    inner=`<div class="opts">${q.opts.map((o,i)=>{
+      const sel=q.multi?(vals&&vals.includes(i)):answers[q.id]===i;
+      return `<div class="opt ${q.multi?'checkbox':''}${sel?' sel':''}" data-i="${i}"><div class="indicator">${icon}</div>${o}</div>`;
+    }).join('')}</div>`;
+  }
+  app.innerHTML=`
+    ${renderProg(idx)}
+    <div class="step-label">${q.label} · ${idx+1} / ${questions.length}</div>
+    <div class="step-q">${q.text}</div>
+    ${q.sub?`<div class="step-sub">${q.sub}</div>`:`<div class="mb"></div>`}
+    ${inner}
+    <div class="nav">
+      ${idx>0?`<button class="btn-back" id="back">← назад</button>`:`<span></span>`}
+      <div style="display:flex;gap:14px;align-items:center;">
+        ${q.optional?`<button class="btn-skip" id="skip">Пропустити</button>`:''}
+        <button class="btn-next" id="next" ${canProceed(q)?'':'disabled'}>Далі →</button>
+      </div>
+    </div>`;
+
+  if (q.type==='text') {
+    document.getElementById('ta').oninput=e=>{answers[q.id]=e.target.value;};
+  } else if (q.multi) {
+    app.querySelectorAll('.opt').forEach(el=>{
+      el.onclick=()=>{
+        const i=parseInt(el.dataset.i);
+        if (!answers[q.id]) answers[q.id]=[];
+        if (answers[q.id].includes(i)){answers[q.id]=answers[q.id].filter(x=>x!==i);el.classList.remove('sel');}
+        else{answers[q.id].push(i);el.classList.add('sel');}
+        document.getElementById('next').disabled=!canProceed(q);
+      };
+    });
+  } else {
+    app.querySelectorAll('.opt').forEach(el=>{
+      el.onclick=()=>{
+        app.querySelectorAll('.opt').forEach(e=>e.classList.remove('sel'));
+        el.classList.add('sel');
+        answers[q.id]=parseInt(el.dataset.i);
+        document.getElementById('next').disabled=false;
+      };
+    });
+  }
+  document.getElementById('next').onclick=()=>{current++;renderStep(current);};
+  const bk=document.getElementById('back');
+  if(bk) bk.onclick=()=>{current--;renderStep(current);};
+  const sk=document.getElementById('skip');
+  if(sk) sk.onclick=()=>{answers[q.id]='';current++;renderStep(current);};
+}
+
+function showSummary() {
+  const rows=[['Настрій',get('mood')],['Платформи',get('platforms')],['Час',get('time')],['Епоха',get('era')],['Досвід',get('level')],['Виключити',get('avoid')],['Вайб',get('vibe')]].filter(r=>r[1]);
+  app.innerHTML=`
+    ${renderProg(questions.length)}
+    <div class="step-q" style="margin-bottom:6px">Готово!</div>
+    <div class="step-sub" style="margin-bottom:1.25rem">Натисни кнопку — AI підбере рекомендації.</div>
+    <div class="summary">${rows.map(r=>`<div class="sum-row"><div class="sum-key">${r[0]}</div><div class="sum-val">${r[1]}</div></div>`).join('')}</div>
+    <div class="nav">
+      <button class="btn-back" id="back">← назад</button>
+      <button class="btn-next" id="go">Отримати рекомендації →</button>
+    </div>`;
+  document.getElementById('go').onclick=()=>showResult(false);
+  document.getElementById('back').onclick=()=>{current=questions.length-1;renderStep(current);};
+}
+
+async function showResult(alt) {
+  const prompt=alt?lastPrompt+'\n\nЗапропонуй 3 абсолютно інші варіанти — не повторюй жодного з попередніх.':buildPrompt(false);
+  if (!alt) lastPrompt=prompt;
+  app.innerHTML=`
+    ${renderProg(questions.length)}
+    <div class="result-label" id="rlabel"><div class="loader"></div><span>${alt?'Шукаємо інші варіанти…':'Підбираємо для тебе…'}</span></div>
+    <div class="result-text" id="rtext"> </div>
+    <div class="result-actions" id="ract" style="display:none">
+      <button class="btn-alt" id="btn-alt">Інші варіанти</button>
+      <button class="btn-alt" id="btn-restart">Почати заново</button>
+    </div>`;
+
+  try {
+    const res=await fetch('/.netlify/functions/recommend',{
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({prompt})
+    });
+    const data=await res.json();
+    if (data.error) throw new Error(data.error.message||JSON.stringify(data.error));
+    const text=data.content?.map(b=>b.text||'').join('')||'Щось пішло не так.';
+    document.getElementById('rlabel').innerHTML='<span>Твоє кіно на сьогодні</span>';
+    document.getElementById('rtext').textContent=text;
+  } catch(e) {
+    document.getElementById('rlabel').innerHTML='<span>Помилка</span>';
+    document.getElementById('rtext').textContent='Не вдалось отримати рекомендації. Спробуй ще раз.\n\n'+e.message;
+  }
+  document.getElementById('ract').style.display='flex';
+  document.getElementById('btn-alt').onclick=()=>showResult(true);
+  document.getElementById('btn-restart').onclick=()=>{answers={};current=0;showHome();};
+}
+
+showHome();
+</script>
+</body>
+</html>
