@@ -5,6 +5,7 @@ export default async function handler(req, context) {
 
   const { prompt } = await req.json();
   const apiKey = Netlify.env.get('ANTHROPIC_API_KEY');
+  const baseUrl = Netlify.env.get('ANTHROPIC_BASE_URL') || 'https://api.anthropic.com';
 
   if (!apiKey) {
     return new Response(JSON.stringify({ error: 'API key not configured' }), {
@@ -13,7 +14,7 @@ export default async function handler(req, context) {
     });
   }
 
-  const response = await fetch('https://api.anthropic.com/v1/messages', {
+  const response = await fetch(`${baseUrl}/v1/messages`, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
@@ -21,7 +22,7 @@ export default async function handler(req, context) {
       'anthropic-version': '2023-06-01'
     },
     body: JSON.stringify({
-      model: 'claude-sonnet-4-20250514',
+      model: 'claude-sonnet-4-5',
       max_tokens: 1200,
       messages: [{ role: 'user', content: prompt }]
     })
