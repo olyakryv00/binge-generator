@@ -303,24 +303,17 @@ function renderStep(idx) {
 
 function showSummary() {
   const rows=[['Настрій',get('mood')],['Платформи',get('platforms')],['Час',get('time')],['Епоха',get('era')],['Досвід',get('level')],['Виключити',get('avoid')],['Вайб',get('vibe')]].filter(r=>r[1]);
-  const savedKey = getApiKey();
   app.innerHTML=`
     ${renderProg(questions.length)}
     <div class="step-q" style="margin-bottom:6px">Готово!</div>
     <div class="step-sub" style="margin-bottom:1.25rem">Перевір відповіді і натисни кнопку.</div>
     <div class="summary">${rows.map(r=>`<div class="sum-row"><div class="sum-key">${r[0]}</div><div class="sum-val">${r[1]}</div></div>`).join('')}</div>
-    <div style="margin-bottom:1.25rem">
-      <input class="api-input" type="password" id="apikey" placeholder="API ключ: sk-ant-…" value="${savedKey}">
-      <div class="api-note">Отримати безкоштовно на <a href="https://console.anthropic.com" target="_blank">console.anthropic.com</a> — зберігається лише в твоєму браузері</div>
-    </div>
+
     <div class="nav">
       <button class="btn-back" id="back">← назад</button>
       <button class="btn-next" id="go">Отримати рекомендації →</button>
     </div>`;
   document.getElementById('go').onclick=()=>{
-    const key=document.getElementById('apikey').value.trim();
-    if(!key){document.getElementById('apikey').style.borderColor='#e07070';return;}
-    saveApiKey(key);
     showResult(false);
   };
   document.getElementById('back').onclick=()=>{current=questions.length-1;renderStep(current);};
