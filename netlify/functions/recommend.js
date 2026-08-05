@@ -4,32 +4,49 @@ export default async function handler(req, context) {
   }
 
   const { prompt } = await req.json();
-  const apiKey = Netlify.env.get('ANTHROPIC_API_KEY');
 
-  if (!apiKey) {
-    return new Response(JSON.stringify({ error: 'API key not configured' }), {
+  const gatewayUrl = Netlify.env.get('NETLIFY_AI_GATEWAY_BASE_URL');
+  const gatewayKey = Netlify.env.get('NETLIFY_AI_GATEWAY_KEY');
+
+  if (!gatewayUrl || !gatewayKey) {
+    return new Response(JSON.stringify({
+      error: {
+        message: 'Netlify AI Gateway is not active. Ensure AI features are enabled for this project and at least one production deploy has completed.'
+      }
+    }), {
       status: 500,
       headers: { 'Content-Type': 'application/json' }
     });
   }
 
-  const response = await fetch('https://api.anthropic.com/v1/messages', {
+  const upstream = await fetch(`${gatewayUrl}/anthropic/v1/messages`, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
-      'x-api-key': apiKey,
+      'Authorization': `Bearer ${gatewayKey}`,
       'anthropic-version': '2023-06-01'
     },
     body: JSON.stringify({
-      model: 'claude-sonnet-4-20250514',
+      model: 'claude-sonnet-4-5',
       max_tokens: 1200,
       messages: [{ role: 'user', content: prompt }]
     })
   });
 
-  const data = await response.json();
+  const bodyText = await upstream.text();
 
-  return new Response(JSON.stringify(data), {
+  if (!upstream.ok) {
+    return new Response(JSON.stringify({
+      error: {
+        message: `AI Gateway responded with ${upstream.status}: ${bodyText}`
+      }
+    }), {
+      status: upstream.status,
+      headers: { 'Content-Type': 'application/json' }
+    });
+  }
+
+  return new Response(bodyText, {
     status: 200,
     headers: { 'Content-Type': 'application/json' }
   });
